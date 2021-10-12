@@ -1,0 +1,30 @@
+#!/usr/bin/env ruby
+
+require "ruby-graphviz"
+require "plist"
+
+class Numeric
+   def to_hex
+      to_s(16).upcase.rjust(2, '0').prepend('0x')
+   end
+end
+
+doc = Plist.parse_xml(ARGV[0])
+pathmap = doc["PathMaps"][0]["PathMap"]
+
+g = GraphViz.new( :G, :type => :graph )
+pathmap.each do |container|
+	container.each do |path|
+		path.each do |node|
+			a = Array.new
+			node.each do |n|
+				a.append g.add_nodes n["NodeID"].to_hex
+			end
+			a.each_cons(2) { |x, y|
+				g.add_edges(x, y)
+			}
+		end
+	end
+end
+
+g.output(:png => "alcpaths.png")
